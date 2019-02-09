@@ -1,0 +1,69 @@
+#!/bin/bash
+
+hostname=  # name of the original Odyssey login hostname
+port=8987  # Which port to tunnel through
+uname=$USER  # Your Odyssey username
+
+# The abbreviated name of the script running
+BASENAME="tunnel_listen"
+
+# Standard function to print an error and exit with a failing return code
+error_exit () {
+    echo "${BASENAME} - ${1}" >&2
+    exit 1
+}
+
+# Usage info
+show_help() {
+error_exit "
+Usage: ${BASENAME} hostname [-h] [-p/--port 8987] [-u/--user $USER]
+
+     hostname          The name of the Odyssey login node to connect to
+     -h / --help       display this help and exit
+     -p / --port       which port to use to tunnel (default: 8987)
+     -u / --user       Username on Odyssey (default: $USER)
+"
+}
+
+function tunnel_clear() {
+    if [[ $# -eq 1 ]]; then
+        echo "clearing port $1"
+        lsof -ti:$1 | xargs kill -9;
+    else
+        echo "clearing port 8987"
+        lsof -ti:8987 | xargs kill -9;
+    fi
+}
+
+while [ "$1" != "" ]; do
+    case $1 in
+	# display usage synopsis, then exit
+	-h|-\?|--help )
+	    show_help
+	    ;;
+	# set the requested tunnel port
+	-p|--port )
+	    port=$2
+	    shift
+	    ;;
+	# set the Odyssey Username
+	-u|--user )
+	    uname=$2
+	    shift
+	    ;;
+	# set the hostname
+	*)
+	    hostname=$1
+	    shift
+	    ;;
+    esac
+    shift
+done
+
+if [ -z "$hostname" ]; then
+    show_help
+fi
+
+echo "listening to ${uname}@${hostname}, on port $port";
+tunnel_clear $port
+ssh $uname@$hostname.rc.fas.harvard.edu -L $port:localhost:$port -f -N

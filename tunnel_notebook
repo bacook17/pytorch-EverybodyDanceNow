@@ -1,0 +1,42 @@
+#!/bin/bash
+
+port=8987  # Which port to tunnel through
+
+# The abbreviated name of the script running
+BASENAME="tunnel_notebook"
+
+# Standard function to print an error and exit with a failing return code
+error_exit () {
+    echo "${BASENAME} - ${1}" >&2
+    exit 1
+}
+
+# Usage info
+show_help() {
+error_exit "
+Usage: ${BASENAME} [-h] [-p/--port 8987]
+Launch a Jupyter Notebook session, tunneling through a given port
+
+     -h / --help       display this help and exit
+     -p / --port       which port to use to tunnel (default: 8987)
+"
+}
+
+
+while [ "$1" != "" ]; do
+    case $1 in
+	# display usage synopsis, then exit
+	-h|-\?|--help )
+	    show_help
+	    ;;
+	# set the requested tunnel port
+	--port )
+	    port=$2
+	    shift
+	    ;;
+    esac
+    shift
+done
+
+echo "Launching Jupyter notebook, tunneled through port $port"
+jupyter notebook --no-browser --port=$port
